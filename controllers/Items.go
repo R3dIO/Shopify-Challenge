@@ -39,10 +39,10 @@ func CreateItem(c *gin.Context) {
 		fmt.Printf("resp %+v\n", coordinates)
 	}
 
-	lat := fmt.Sprintf("%f", coordinates[0].Lat) 
-	lon := fmt.Sprintf("%f", coordinates[0].Lon) 
+	lat := string(coordinates[0].Lat) 
+	lon := string(coordinates[0].Lon) 
 
-	body, err := GetStringRespFromUrl("https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon= "+ lon + "&appid=" + key, false)
+	body, err := GetStringRespFromUrl("https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon="+ lon + "&appid=" + key, true)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -57,7 +57,6 @@ func CreateItem(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": item})
 }
-
 
 func FindItemById(c *gin.Context) {  // Get model if exist
 	var item models.Item
@@ -103,10 +102,10 @@ func UpdateItem(c *gin.Context) {
 			fmt.Printf("resp %+v\n", coordinates)
 		}
 	
-		lat := fmt.Sprintf("%f", coordinates[0].Lat) 
-		lon := fmt.Sprintf("%f", coordinates[0].Lon) 
+		lat := string(coordinates[0].Lat) 
+		lon := string(coordinates[0].Lon)
 	
-		body, err := GetStringRespFromUrl("https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon= "+ lon + "&appid=" + key, false)
+		body, err := GetStringRespFromUrl("https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon="+ lon + "&appid=" + key, false)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return

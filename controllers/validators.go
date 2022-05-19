@@ -1,6 +1,10 @@
 package controllers
 
-import "github.com/R3dIO/shopify-production_engineer/models"
+import (
+	"encoding/json"
+
+	"github.com/R3dIO/shopify-production_engineer/models"
+)
 var cities = "London Vancouver Delhi Tokyo Houston"
 type CreateItemInput struct {
 	Name     string `json:"name" binding:"required"`
@@ -23,8 +27,8 @@ func UpdateHttpReqToDBReq(req UpdateItemInput) models.Item {
 }
 
 type Coordinates struct {
-	Name     	string  `json:"name"`
-	Lat			float64  `json:"lat"`
-	Lon			float64  `json:"lon"`
-	Country		string  `json:"country"`
+	Name     	string  	`json:"name"`
+	Lat			json.Number `json:"lat"`
+	Lon			json.Number `json:"lon"`
+	Country		string  	`json:"country"`
 }
