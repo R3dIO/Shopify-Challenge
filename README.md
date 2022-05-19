@@ -22,6 +22,7 @@
 ```
 
 # Crud on Items
+- Currently Five cities are supported  "London Vancouver Delhi Tokyo Houston"
 - Create a item
 ```sh
     curl --location --request POST 'http://localhost:8080/items/' \
