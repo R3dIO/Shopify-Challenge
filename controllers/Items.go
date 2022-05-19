@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var key = os.Getenv("KEY")  
+
 // GET /item
 // Get all items
 func ListItems(c *gin.Context) {
@@ -26,11 +28,10 @@ func CreateItem(c *gin.Context) {
 	  return
 	}
 
-	key := os.Getenv("KEY")  
 	// Create Item
 	item := models.Item{Name: input.Name, City: input.City, Quantity: input.Quantity}
 	coordinates := []Coordinates{}
-	err := GetJsonRespFromUrl("http://api.openweathermap.org/geo/1.0/direct?q=London&limit=5&appid=" + key, &coordinates, false)
+	err := GetJsonRespFromUrl("http://api.openweathermap.org/geo/1.0/direct?q=" + item.City +"&limit=5&appid=" + key, &coordinates, false)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -92,6 +93,27 @@ func UpdateItem(c *gin.Context) {
 	}
   
 	input := UpdateHttpReqToDBReq(inputRaw)
+	if (input.City != item.City) {
+		coordinates := []Coordinates{}
+		err := GetJsonRespFromUrl("http://api.openweathermap.org/geo/1.0/direct?q="+ input.City +"&limit=5&appid=" + key, &coordinates, false)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		} else {
+			fmt.Printf("resp %+v\n", coordinates)
+		}
+	
+		lat := fmt.Sprintf("%f", coordinates[0].Lat) 
+		lon := fmt.Sprintf("%f", coordinates[0].Lon) 
+	
+		body, err := GetStringRespFromUrl("https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon= "+ lon + "&appid=" + key, false)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		input.Description = body
+	}
+
 	err = models.UpdateItem(&item, &input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
