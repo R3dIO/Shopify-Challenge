@@ -1,10 +1,14 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"github.com/R3dIO/shopify-production_engineer/models"
 	"github.com/gin-gonic/gin"
 )
+
+var key = os.Getenv("KEY")  
 
 // GET /item
 // Get all items
@@ -23,10 +27,29 @@ func CreateItem(c *gin.Context) {
 	  c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	  return
 	}
-  
+
 	// Create Item
-	item := models.Item{Name: input.Name, City: input.City}
-	err := models.CreateItem(&item)
+	item := models.Item{Name: input.Name, City: input.City, Quantity: input.Quantity}
+	coordinates := []Coordinates{}
+	err := GetJsonRespFromUrl("http://api.openweathermap.org/geo/1.0/direct?q=" + item.City +"&limit=5&appid=" + key, &coordinates, false)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	} else {
+		fmt.Printf("resp %+v\n", coordinates)
+	}
+
+	lat := string(coordinates[0].Lat) 
+	lon := string(coordinates[0].Lon) 
+
+	body, err := GetStringRespFromUrl("https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon="+ lon + "&appid=" + key, true)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	item.Description = body
+	err = models.CreateItem(&item)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -34,7 +57,6 @@ func CreateItem(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"data": item})
 }
-
 
 func FindItemById(c *gin.Context) {  // Get model if exist
 	var item models.Item
@@ -70,6 +92,27 @@ func UpdateItem(c *gin.Context) {
 	}
   
 	input := UpdateHttpReqToDBReq(inputRaw)
+	if (input.City != item.City) {
+		coordinates := []Coordinates{}
+		err := GetJsonRespFromUrl("http://api.openweathermap.org/geo/1.0/direct?q="+ input.City +"&limit=5&appid=" + key, &coordinates, false)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		} else {
+			fmt.Printf("resp %+v\n", coordinates)
+		}
+	
+		lat := string(coordinates[0].Lat) 
+		lon := string(coordinates[0].Lon)
+	
+		body, err := GetStringRespFromUrl("https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon="+ lon + "&appid=" + key, false)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		input.Description = body
+	}
+
 	err = models.UpdateItem(&item, &input)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
